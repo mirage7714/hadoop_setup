@@ -1,0 +1,25 @@
+pig install
+1. download pig or use ftp to upload file into the localhost
+wget http://ftp.tc.edu.tw/pub/Apache/pig/pig-0.15.0/pig-0.15.0.tar.gz
+
+2. unzip the file
+tar -xvf pig-0.15.0.tar.gz -C /usr/local
+mv /usr/local/pig-0.15.0 /usr/local/pig
+chown -R hadoop:hadoop /usr/local/pig
+
+3. edit ~/.bashrc file
+nano ~/.bashrc
+export PATH=/usr/local/pig/bin:$PATH
+export PIG_CLASSPATH=/usr/local/hadoop/etc/hadoop
+
+4. check pig version
+pig -help
+
+5. (1)execute pig on local mode
+pig -x local
+
+(2)execute pig on mapreduce mode
+pig 
+or 
+pig -x mapreduce
+

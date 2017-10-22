@@ -1,0 +1,50 @@
+Install and configure Zookeeper
+
+1) Install ZooKeeper on all namenodes(master1,2,3)
+   (Download and unpack zookeeper) 
+   sudo -i (switch to root)
+   wget http://apache.stu.edu.tw/zookeeper/zookeeper-3.4.6/zookeeper-3.4.6.tar.gz 
+   tar -xvf zookeeper-3.4.6.tar.gz -C /usr/local
+   mv /usr/local/zookeeper-3.4.6 /usr/local/zookeeper
+   chown -R hadoop:hadoop /usr/local/zookeeper
+   exit
+  
+2) Switch to "hadoop" user to configure zookeeper
+   su - hadoop
+  
+3) Configure zoo.cfg file on all namenodes(master1,2,3)
+   cd /usr/local/zookeeper/conf
+   cp zoo_sample.cfg zoo.cfg
+   vim zoo.cfg
+
+   tickTime=2000
+   initLimit=10
+   syncLimit=5
+   dataDir=/usr/local/zookeeper/zoodata
+   dataLogDir=/usr/local/zookeeper/logs
+   clientPort=2181
+
+   server.1=master1.example.org:2888:3888
+   server.2=master2.example.org:2888:3888
+   server.3=master3.example.org:2888:3888
+
+4) Create "zoodata" directory and a file named 'myid' in it (master1,2,3)
+   cd /usr/local/zookeeper
+   mkdir logs
+   mkdir zoodata
+   echo "1" > zoodata/myid (on master1)
+   echo "2" > zoodata/myid (on master2)
+   echo "3" > zoodata/myid (on master3)
+   
+5) Configure environment variables (master1,2,3)
+   vim ~/.bashrc
+   
+   export ZOOKEEPER_HOME=/usr/local/zookeeper
+   export PATH=$PATH:$ZOOKEEPER_HOME/bin   
+   
+   source ~/.bashrc
+   
+6) Starting ZooKeeper on all namenodes(master1,2,3)
+   zkServer.sh start
+   jps
+ 

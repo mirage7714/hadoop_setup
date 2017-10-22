@@ -1,0 +1,148 @@
+0) ensure basic hadoop is running
+   start-dfs.sh, start-yarn.sh
+   mr-jobhistory-daemon.sh start historyserver
+   jps
+
+Install Hive on master1:
+
+1) Download and unpack Hive
+   sudo -i (switch to root)
+   wget http://apache.stu.edu.tw/hive/stable/apache-hive-1.2.1-bin.tar.gz
+   tar -xvf apache-hive-1.2.1-bin.tar.gz -C /usr/local
+   mv /usr/local/apache-hive-1.2.1-bin /usr/local/hive
+   chown -R hadoop:hadoop /usr/local/hive
+   exit
+	
+2) Switch to hadoop user
+   su - hadoop
+   
+3) Configure environment variables   
+   vim ~/.bashrc
+   
+   export HIVE_HOME=/usr/local/hive
+   export PATH=$PATH:$HIVE_HOME/bin
+   
+   # To fix [ERROR] Terminal initialization failed; falling back to unsupported
+   # https://cwiki.apache.org/confluence/display/Hive/Hive+on+Spark%3A+Getting+Started
+   export HADOOP_USER_CLASSPATH_FIRST=true
+   
+4) Reload ~/.bashrc
+   source ~/.bashrc
+   
+5) Create folders in Hadoop file system
+   hadoop fs -ls /
+   hadoop fs -mkdir /tmp (if not exist)
+   hadoop fs -mkdir -p /user/hive/warehouse
+   hadoop fs -chmod g=rwx /tmp
+   hadoop fs -chmod g=rwx /user/hive/warehouse
+   hadoop fs -ls /user/hive
+
+6) Test hive
+   hive
+      show databases;
+      exit;
+
+7) Copy MSSQL jdbc driver "sqljdbc41.jar" to $HIVE_HOME/lib directory
+   cp sqljdbc41.jar /usr/local/hive/lib
+   
+8) Change Hive metastore to MSSQL 
+   vim /usr/local/hive/conf/hive-site.xml  
+
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:sqlserver://192.168.56.70:1433;databaseName=metastore_db</value>
+        <description>metadata is stored in a MSSQL server</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>com.microsoft.sqlserver.jdbc.SQLServerDriver</value>
+        <description>MSSQL JDBC driver class</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>hiveuser</value>
+        <description>user name for connecting to mssql server</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>hiveuser</value>
+        <description>password for connecting to mssql server</description>
+    </property>
+</configuration>
+   
+9) Test hive
+    hive
+       show databases;
+       exit;
+
+10) Start hiveserver2 (if need remote connection)
+    su - hadoop
+	/usr/local/hive/bin/hiveserve2 &
+	   
+11) Using beeline/database jdbc(use hiveuser database account)
+    beeline
+	   !connect jdbc:sqlserver://192.168.56.70:1433;databaseName=metastore_db hiveuser hiveuser
+	   SELECT Distinct TABLE_NAME FROM information_schema.TABLES;
+	   !quit
+	   
+12) Using beeline/hive2 jdbc(use hadoop os account)
+    beeline
+	   !connect jdbc:hive2:// hadoop hadoop
+	   or 
+	   !connect jdbc:hive2://localhost:10000 hadoop hadoop (need to start hiveserver2)
+       
+	   show databases;
+	   !quit
+	   
+13) Test hive data processing
+    CREATE TABLE pokes (foo INT, bar STRING);
+	CREATE TABLE invites (foo INT, bar STRING) PARTITIONED BY (ds STRING);
+	show tables;
+	DESCRIBE invites;
+
+	LOAD DATA LOCAL INPATH '/usr/local/hive/examples/files/kv1.txt' 
+	    OVERWRITE INTO TABLE pokes;
+	LOAD DATA LOCAL INPATH '/usr/local/hive/examples/files/kv2.txt' 
+	    OVERWRITE INTO TABLE invites PARTITION (ds='2016-02-11');
+    LOAD DATA LOCAL INPATH '/usr/local/hive/examples/files/kv3.txt' 
+	    OVERWRITE INTO TABLE invites PARTITION (ds='2016-02-12');
+	
+    SELECT * FROM pokes;	
+	SELECT * FROM invites WHERE ds = '2016-02-11';
+
+	
+On Windows Client
+Integration with SQuirrel SQL Client 
+
+1) Download jar files form Hadoop hive node
+      /usr/local/hive/lib/hive-jdbc-*-standalone.jar (for Hive)
+      /usr/local/hadoop/share/hadoop/common/hadoop-common-*.jar (for Hadoop 2.x)
+
+2) Download, install and start the SQuirrel SQL Client from the SQuirrel SQL website
+      http://squirrel-sql.sourceforge.net/
+      Select "Install jar of SQuirreL 3.7 for Windows/Linux/others"
+		  	
+3) Select 'Drivers -> New Driver...' to register Hive's JDBC driver that works with HiveServer2
+      Driver name: Hive 1.2 
+	  Example URL: jdbc:hive2://192.168.56.90:10000
+       
+4) Select 'Extra Class Path -> Add' to add the following jars 
+      hive-jdbc-*-standalone.jar (for Hive)
+      common/hadoop-common-*.jar (for Hadoop 2.x)
+ 
+5) Select 'List Drivers'. This will cause SQuirrel to parse your jars for JDBC drivers 
+	  From the 'Class Name' input box select "org.apache.hive.jdbc.HiveDriver" for HiveServer2
+
+6) Click 'OK' to complete the driver registration 
+
+7) Select 'Aliases -> Add Alias...' to create a connection alias 
+      Name: HiveServer2
+      Driver: Hive 1.2
+      User Name: hadoop
+	  Password: hadoop 
+	  Click 'OK' to save the connection alias
+    
+	

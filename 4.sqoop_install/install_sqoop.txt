@@ -1,0 +1,51 @@
+1. download hadoop-compatible sqoop version (use root)
+wget http://apache.stu.edu.tw/sqoop/1.4.6/sqoop-1.4.6.bin__hadoop-2.0.4-alpha.tar.gz
+
+2. unzip the gz file to /usr/local 
+tar -xvf sqoop-1.4.6.bin_hadoop-2.0.4-alpha.tar.gz -C /usr/local
+
+3. change the folder name to 'sqoop'
+mv /usr/local/sqoop-1.4.6.bin__hadoop-2.0.4-alpha/ /usr/local/sqoop
+
+4. change the owner to hadoop
+chown hadoop:hadoop /usr/local/sqoop/
+
+5. switch user to hadoop
+su - hadoop
+
+6. edit ~/.bashrc file
+sudo nano ~/.bashrc
+
+7. add sqoop path
+export SQOOP_HOME=/usr/local/sqoop
+export PATH=$PATH:$SQOOP_HOME/bin
+
+8. reload ~/.bashrc file
+source ~/.bashrc
+
+9. check sqoop installation
+sqoop help
+
+10. suppress the warning about hbase, hcat and accumulo
+The warning is to notice that there's no hbase, hcat and accumulo installation on the node. 
+And the warning can be suppressed by setting HBASE_HOME, HCAT_HOME and ACCUMULO_HOME to an existing directory.
+Edit ~/.bashrc
+sudo nano ~/.bashrc
+
+11. Add HBASE_HOME, HCAT_HOME,and ACCUMULO_HOME (I use zookeeper home here)
+export HBASE_HOME=/usr/local/zookeeper
+export PATH=$PATH:$HBASE_HOME/bin
+export HCAT_HOME=/usr/local/zookeeper
+export PATH=$PATH:$HCAT_HOME/bin
+export ACCUMULO_HOME=/usr/local/zookeeper
+export PATH=$PATH:$ACCUMULO_HOME/bin
+
+12. reload ~/.bashrc
+source ~/.bashrc
+
+13. Add mysql jdbc driver to sqoop/bin
+mv mysql-connector-java-5.1.38-bin.jar /usr/local/sqoop/lib/
+
+14. test connection to mysql
+sqoop list-databases --connect jdbc:mysql://localhost/ --username root --password dietpi
+

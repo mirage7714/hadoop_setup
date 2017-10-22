@@ -1,0 +1,165 @@
+Setup Hadoop on ubuntu14.04
+
+1) Switch to root
+   sudo -i
+
+2) Add hadoop cluster hosts to hosts file
+   vim /etc/hosts
+      127.0.0.1 localhost
+      192.168.56.90 master1.example.org master1
+      192.168.56.89 master2.example.org master2
+      192.168.56.88 master3.example.org master3
+      192.168.56.91 slave1.example.org slave1
+      192.168.56.92 slave2.example.oeg slave2
+
+3) Create hadoop account, and grant root privilege
+   adduser hadoop
+   gpasswd -a hadoop sudo
+   groups hadoop
+  
+4) Install Oracle Java JDK from webupd8team (https://launchpad.net/~webupd8team)
+   add-apt-repository ppa:webupd8team/java
+   apt-get update
+   apt-get install oracle-java8-set-default
+   
+5) Check Oracle Java version
+   java -version
+   javac -version
+   update-alternatives --display java
+
+6) Download hadoop from apache mirror site
+   cd
+   wget http://apache.stu.edu.tw/hadoop/common/hadoop-2.7.2/hadoop-2.7.2.tar.gz 
+   
+7) extract hadoop tar file to /usr/local, set owner and group to hadoop user
+   tar -xvf hadoop-2.7.2.tar.gz -C /usr/local
+   mv /usr/local/hadoop-2.7.2 /usr/local/hadoop
+   chown -R hadoop:hadoop /usr/local/hadoop
+
+8) Switch to hadoop user
+   su - hadoop
+   
+9) Configuring SSH password-less login (on master1)
+   ssh-keygen -t dsa 
+      Enter file in which to save the key: [Return]
+	  Enter passphrase (empty for no passphrase): [Return]
+	  Enter same passphrase again: [Return]
+	  
+   ls -l ~/.ssh 
+   
+   (copy public key to authorized_keys file)
+   cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
+      
+   (copy public key to other nodes in cluster)
+   ssh-copy-id -i ~/.ssh/id_dsa.pub hadoop@master2.example.org
+   ...
+   
+   (copy private key to master2,3)
+   scp ~/.ssh/id_dsa master2.example.org:/home/hadoop/.ssh
+   ...
+   
+   exit (exit hadoop user)
+   
+10) Test password-less login (on master1,2,3)
+    ssh master1.example.org
+    ssh master2.example.org
+	ssh master3.example.org
+	ssh slave1.example.org
+	ssh slave2.example.org
+	
+11) Set environment variables 
+    vim ~/.bashrc
+    
+	# Set HADOOP_HOME
+    export HADOOP_HOME=/usr/local/hadoop
+    # Set JAVA_HOME 
+    export JAVA_HOME=/usr/lib/jvm/java-7-oracle
+    # Add Hadoop bin and sbin directory to PATH
+    export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+
+    source ~/.bashrc
+	env
+
+12) Update hadoop-env.sh
+    vim /usr/local/hadoop/etc/hadoop/hadoop-env.sh
+	export JAVA_HOME=/usr/lib/jvm/java-7-oracle
+	export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
+	
+13) Configure core-site.xml
+    vim /usr/local/hadoop/etc/hadoop/core-site.xml 
+	
+	<property>
+       <name>hadoop.tmp.dir</name>
+       <value>/home/hadoop/tmp</value>
+       <description>Temporary Directory.</description>
+    </property>
+
+    <property>
+       <name>fs.defaultFS</name>
+       <value>hdfs://master1.example.org:54310</value>
+       <description>Use HDFS as file storage engine</description>
+    </property>
+
+14) Configure mapred-site.xml
+    cp /usr/local/hadoop/etc/hadoop/mapred-site.xml.template
+       /usr/local/hadoop/etc/hadoop/mapred-site.xml
+	
+	vim /usr/loca/hadoop/etc/hadoop/mapred-site.xml
+	
+	<property>
+       <name>mapreduce.framework.name</name>
+       <value>yarn</value>
+    </property>
+    <property>
+	   <name>mapreduce.jobhistory.address</name>
+	   <value>master3.example.org:10020</value>
+    </property>
+    <property>
+	   <name>mapreduce.jobhistory.webapp.address</name>
+	   <value>master3.example.org:19888</value>
+    </property>
+	
+15) Configure yarn-site.xml
+    vim /usr/local/hadoop/etc/hadoop/yarn-site.xml
+
+    <property>
+       <name>yarn.nodemanager.aux-services</name>
+       <value>mapreduce_shuffle</value>
+    </property>
+    <property>
+	   <name>yarn.resourcemanager.hostname</name>
+	   <value>master1.example.org</value>
+    </property>	
+	
+16) Create /usr/local/hadoop/etc/hadoop/slaves file
+    vim /usr/local/hadoop/etc/hadoop/slaves
+       master2.example.org
+       master3.example.org
+       slave1.example.org
+       slave2.example.org
+
+17) Format the Namenode on master1 node (only once)
+    hdfs namenode -format
+
+18) Start the Distributed Format System on master1 node
+    start-dfs.sh
+    jps (validate the result)
+    http://master1.example.org:50070 (check NameNode and DataNode)
+      
+19) Start YARN on master1 node
+    start-yarn.sh
+	jps
+	
+20) Start History Server on master3 node	
+    mr-jobhistory-daemon.sh start historyserver
+    jps
+
+21) Check YARN 	
+    http://master1.example.org:8088/cluster (yarn cluster info)
+
+22) Execute a MapReduce example 
+    hadoop jar /usr/local/hadoop/share/hadoop/mapreduce/hadoop-mapreduce-examples-2.7.2.jar pi 30 100
+
+	http://master1.example.org:8088/cluster/apps (check running appliction)
+   
+   

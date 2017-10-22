@@ -51,14 +51,6 @@ nano /usr/local/tez/conf/tez-site.xml
 <name>tez.use.cluster.hadoop-libs</name>
 <value>true</value>
 </property>
-<property>
-<name>tez.runtime.compress</name>
-<value>true</value>
-</property>
-<property>
-<name>tez.runtime.compress.codec</name>
-<value>org.apache.hadoop.io.compress.SnappyCodec</value>
-</property>
 </configuration>
 
 6. edit hive-env.sh to run hive on tez

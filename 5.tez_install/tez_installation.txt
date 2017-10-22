@@ -61,3 +61,16 @@ nano /usr/local/hive/conf/hive-env.sh
 export TEZ_HOME=/usr/local/tez
 export TEZ_CONF_DIR=/usr/local/hadoop/etc/hadoop
 export HADOOP_CLASSPATH=${HADOOP_CLASSPATH}:${TEZ_CONF_DIR}:${TEZ_HOME}/*:${TEZ_HOME}/lib/*
+
+7. Edit hive-site.xml
+nano /usr/local/hive/conf/hive-site.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<configuration>
+    <property>
+        <name>hive.execution.engine</name>
+        <value>tez</value>
+        <description>set default hive engine</description>
+    </property>
+</configuration>

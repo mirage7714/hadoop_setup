@@ -1,0 +1,62 @@
+1. Download spark-bin (as root user)
+wget https://d3kbcqa49mib13.cloudfront.net/spark-2.1.0-bin-hadoop2.7.tgz
+tar -xvf spark-2.1.0-bin-hadoop2.7.tgz -C /usr/local
+mv /usr/local/spark-2.1.0 /usr/local/spark
+chown -R hadoop:hadoop /usr/local/spark
+
+2. Download and install scala
+wget http://scala-lang.org/files/archive/scala-2.11.10.tgz
+tar -xvf scala-2.11.10.tgz -C /usr/lib
+mv /usr/lib/scala-2.11.10 /usr/lib/scala
+rm scala-2.11.10.tgz
+
+3. Create symbplic links 
+ln -s /usr/lib/scala/bin/scala /bin/scala
+ln -s /usr/lib/scala/bin/scalac /bin/scalac
+
+2. Edit ~/.bashrc
+su - hadoop
+nano ~/.bashrc
+
+# Set SCALA_HOME
+export SCALA_HOME=/usr/lib/scala
+export PATH:$PATH:$SCALA_HOME/bin
+
+# Set SPARK_HOME
+export SPARK_HOME=/usr/local/spark
+export PATH:$PATH:$SPARK_HOME/bin
+
+source ~/.bashrc
+
+3. Edit spark config
+cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
+nano /usr/local/spark/conf/spark-env.sh
+
+export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
+export SPARK_MASTER_IP=master
+export SPARK_WORKER_CORES=1
+export SPARK_WORKER_MEMORY=1024M
+export SPARK_WORKER_INSTANCES=2
+
+4. Edit slaves file
+nano /usr/local/spark/conf/slaves
+
+node1
+node2
+
+5. Start spark cluster
+bash /usr/local/spark/sbin/start-all.sh
+
+6. Execute spark-shell
+spark-shell --master spark://master:7077
+
+7. Install Zeppelin web UI console
+sudo -i
+wget http://ftp.mirror.tw/pub/apache/zeppelin/zeppelin-0.7.3/zeppelin-0.7.3-bin-all.tgz
+tar -xvf zeppelin-0.7.3-bin-all.tgz -C /usr/local
+mv /usr/local/zeppelin-0.7.3 /usr/local/zeppelin
+chown -R hadoop:hadoop /usr/local/zeppelin
+rm zeppelin-0.7.3-bin-all.tgz
+
+8. Edit zeppelin config
+

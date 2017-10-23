@@ -9,3 +9,4 @@ Some is from the courses I took. And some is from my experiment installation.
 ### 4. sqoop installation
 ### 5. tez installation
 ### 6. zookeeper installation
+### 7. spark installation

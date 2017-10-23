@@ -20,11 +20,11 @@ nano ~/.bashrc
 
 # Set SCALA_HOME
 export SCALA_HOME=/usr/lib/scala
-export PATH:$PATH:$SCALA_HOME/bin
+export PATH=$PATH:$SCALA_HOME/bin
 
 # Set SPARK_HOME
 export SPARK_HOME=/usr/local/spark
-export PATH:$PATH:$SPARK_HOME/bin
+export PATH=$PATH:$SPARK_HOME/bin
 
 source ~/.bashrc
 
@@ -32,10 +32,13 @@ source ~/.bashrc
 cp /usr/local/spark/conf/spark-env.sh.template /usr/local/spark/conf/spark-env.sh
 nano /usr/local/spark/conf/spark-env.sh
 
+export SCALA_HOME=/usr/lib/scala
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
 export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
+export SPARK_LOCAL_DIR=/usr/local/spark
 export SPARK_MASTER_IP=master
-export SPARK_WORKER_CORES=1
-export SPARK_WORKER_MEMORY=1024M
+export SPARK_WORKER_CORES=2
+export SPARK_WORKER_MEMORY=4096M
 export SPARK_WORKER_INSTANCES=2
 
 4. Edit slaves file
@@ -59,4 +62,12 @@ chown -R hadoop:hadoop /usr/local/zeppelin
 rm zeppelin-0.7.3-bin-all.tgz
 
 8. Edit zeppelin config
+nano /usr/local/zeppelin/conf/zeppelin-env.sh
+
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+export MASTER=spark://master:7077
+export SPARK_HOME=/usr/local/spark
+export SPARK_SUBMIT_OPTIONS="--master spark://master:7077 --driver-memory 2G --executor-memory 2G --master yarn"
+export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
+export ZEPPELIN_PORT=5566
 
